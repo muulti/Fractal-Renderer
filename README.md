@@ -13,5 +13,5 @@ A **Unity project** for rendering mesmerizing fractals, I programmed a setup for
 ## Keyboard Input
 - I added some controls to tinker with the Sets in real time
 <div style="text-align: center;">
-  <img src="Assets/MovngJuliaSet.gif" alt="Modifying parameters in Julia Set" width="600" height="400">
+  <img src="Assets/MovingJuliaSet.gif" alt="Modifying parameters in Julia Set" width="600" height="400">
 </div>
