@@ -7,6 +7,7 @@ static const float PI = 3.14159265359; // 10 decimal places for good precision
 float2 resolution; // Screen resolution
 float2 offset;     // Offset in the complex plane
 float zoom;        // Zoom level
+float time;         //Actually useless haha
 int maxIterations; // Maximum iterations
 float escapeRadius; // Escape radius (limit)
 float2 secondTerm;
@@ -47,9 +48,9 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float t = (float)iterations / maxIterations;
 
     // Apply color gradient
-    //float3 color = float3(t,t,t);    //Greyscale
+    float3 color = float3(t,t,t);    //Greyscale (black background)
     //float3 color = float3(t*t, 0., t * t*t);    //Purple-Black
-    float3 color = float3(1-t,1-t,1-t);    //Black
+    //float3 color = float3(1-t,1-t,1-t);    //Greyscale (white background)
     
 
     // Write the color to the output texture

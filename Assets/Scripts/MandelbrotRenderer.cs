@@ -38,6 +38,7 @@ public class MandelbrotRenderer : MonoBehaviour
         computeShader.SetTexture(0, "Result", renderTexture); // Bind texture
         computeShader.SetVector("resolution", new Vector2(textureSize, textureSize));
         computeShader.SetFloat("zoom", zoom);
+        computeShader.SetFloat("t", Time.deltaTime);
         computeShader.SetVector("offset", offset);
         computeShader.SetInt("maxIterations", maxIterations);
         computeShader.SetFloat("escapeRadius", escapeRadius);
@@ -102,7 +103,7 @@ public class MandelbrotRenderer : MonoBehaviour
         if (Input.GetKey(KeyCode.Space))
         {
             Debug.Log("Space Key Pressed");
-            zoom+=1*animationSpeed;
+            zoom*=1.1f;
         }
         if (Input.GetKey(KeyCode.LeftShift))
         {
