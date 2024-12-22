@@ -6,4 +6,5 @@ A **Unity project** for rendering mesmerizing fractals, I programmed a setup for
 - It´s a compute shader, so it may get tough on the GPU especially if the max number of iterations per pixel is tinkered with.
 
 
-![Zooming on Mandelbrot set](Assets/MandelbrotZoom.gif)
+<img src="Assets/MandelbrotZoom.gif" alt="Zooming on the Mandelbrot set" width="300" height="200">
+
