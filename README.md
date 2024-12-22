@@ -8,3 +8,10 @@ A **Unity project** for rendering mesmerizing fractals, I programmed a setup for
 <div style="text-align: center;">
   <img src="Assets/MandelbrotZoom.gif" alt="Zooming on the Mandelbrot set" width="600" height="400">
 </div>
+
+
+## Keyboard Input
+- I added some controls to tinker with the Sets in real time
+<div style="text-align: center;">
+  <img src="Assets/MovngJuliaSet.gif" alt="Modifying parameters in Julia Set" width="600" height="400">
+</div>
