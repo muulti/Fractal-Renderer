@@ -1,0 +1,137 @@
+#pragma kernel CSMain
+
+RWTexture2D<float4> Result;
+
+static const float PI = 3.14159265359; // 10 decimal places for good precision
+// Parameters for the Mandelbrot set
+float2 resolution; // Screen resolution
+float2 offset;     // Offset in the complex plane
+float zoom;        // Zoom level
+int maxIterations; // Maximum iterations
+float escapeRadius; // Escape radius (limit)
+float2 secondTerm;
+
+// Compute the next value in the sequence
+float2 MandelbrotComputeNext(float2 current, float2 c);
+float2 JuliaComputeNext(float2 current, float2 c) ;
+// Detect divergence
+int MandelbrotRender(float2 c, int maxIt, float lim);
+int JuliaRender(float2 coords, int maxIt, float lim);
+
+int RedditGuyRender(float2 coords, int maxIt, float lim);
+float2 RedditGuyComputeNext(float2 z, float2 c);
+
+[numthreads(16, 16, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID) 
+{
+    
+    if (id.x >= resolution.x || id.y >= resolution.y) return;
+
+    //float2 ct = float2(constantValue,constantValue);
+    // Map pixel to the complex plane
+    float aspectRatio = resolution.x / resolution.y;
+    float2 pixelID;
+
+    if (resolution.x > resolution.y) {
+        // If the screen is wider than tall, normalize x by aspect ratio
+        pixelID = (float2(id.x, id.y) / resolution.y - float2(resolution.x / resolution.y * 0.5, 0.5)) * 2.0 / zoom + offset;
+    } else {
+        // If the screen is taller than wide, normalize y by aspect ratio
+        pixelID = (float2(id.x, id.y) / resolution.x - float2(0.5, resolution.y / resolution.x * 0.5)) * 2.0 / zoom + offset;
+    }
+
+    // Mandelbrot set: Z0 = 0, C = fractal
+    int iterations = MandelbrotRender(pixelID, maxIterations, escapeRadius);
+
+    // Normalize iterations for coloring
+    float t = (float)iterations / maxIterations;
+
+    // Apply color gradient
+    //float3 color = float3(t,t,t);    //Greyscale
+    //float3 color = float3(t*t, 0., t * t*t);    //Purple-Black
+    float3 color = float3(1-t,1-t,1-t);    //Black
+    
+
+    // Write the color to the output texture
+    Result[id.xy] = float4(color, 1.0);
+}
+
+float2 ComputeNext(float2 z, float2 c)
+// Z=Z^2+C   wher both C and Z are complex in the form of Z=a+b*i
+//To compute Z
+//Where Z=a+bi & C=j+ki
+//Develop formula --> Z=a^2-b^2+2abi+j+ki
+//Real side Zr=a^2-b^2+j
+//Complex side Zc=2abi+ki
+{
+    //Real side Zr=a^2-b^2+j
+    float real = z.x * z.x - z.y * z.y + c.x;
+    //Complex side Zc=2abi+ki
+    float imag = 2.0 * z.x * z.y + c.y;
+    return float2(real, imag);
+}
+
+float2 RedditGuyComputeNext(float2 z, float2 c)
+// Z=i^z+c   wher both C and Z are complex in the form of Z=a+b*i
+//To compute Z
+//Where i^z = e^z*pi*i/2
+//but since z=a+b*i
+//z*i=a*i-b
+//And e^(term+@i) = term *[cos(@)+sin(@)*i]
+//then z = e^(-b*pi/2)+e^(a*i*pi/2)
+//Complex side is imaginary sine and real is real cosine 
+{
+    float expTerm = exp(-z.y*PI/2.);
+    
+    float real = cos(z.x*PI/2) + expTerm + c.x;
+    
+    float imag = sin(z.y*PI/2) + c.y;
+    
+    return float2(real, imag);
+}
+
+// Detect divergence
+int MandelbrotRender(float2 coords, int maxIt, float lim)
+//In Mandelbrot fractal, Z is always (0,0) for each pixel at the start
+//C changes depending on the pixel
+{
+    float2 zn = secondTerm; // Start at Z0 = 0
+    int i = 0;
+    while (i < maxIt && dot(zn, zn) < lim * lim) 
+    {
+        zn = ComputeNext(zn, coords); // Mandelbrot iteration
+        i++;
+    }
+    return i;
+}
+
+// Detect divergence
+int JuliaRender(float2 coords, int maxIt, float lim)
+//In Julia fracta, Z changes depending on the pixel, and C remains fixed
+//Changing C results in modifying Julia´s anatomy (technically should at least)
+{
+    //c: -1,3 + 0,00525·i
+    float2 zn = coords; // Start at Z0 = 0
+    int i = 0;
+    while (i < maxIt && dot(zn, zn) < lim * lim) 
+    {
+        zn = ComputeNext(zn, secondTerm);
+        i++;
+    }
+    return i;
+}
+
+int RedditGuyRender(float2 coords, int maxIt, float lim)
+//In Julia fracta, Z changes depending on the pixel, and C remains fixed
+//Changing C results in modifying Julia´s anatomy (technically should at least)
+{
+    //c: -1,3 + 0,00525·i
+    float2 zn = float2(0.,0.); // Start at Z0 = 0
+    int i = 0;
+    while (i < maxIt && dot(zn, zn) < lim * lim) 
+    {
+        zn = RedditGuyComputeNext(zn, coords);
+        i++;
+    }
+    return i;
+}
