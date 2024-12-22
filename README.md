@@ -5,5 +5,5 @@ A **Unity project** for rendering mesmerizing fractals, I programmed a setup for
 ## Renderer
 - It´s a compute shader, so it may get tough on the GPU especially if the max number of iterations per pixel is tinkered with.
 
-https://github.com/user-attachments/assets/88601b1e-bfe7-49a7-9ee8-39fa41712d3b
 
+[MandelbrotZoom.gif.zip](https://github.com/user-attachments/files/18221024/MandelbrotZoom.gif.zip)
