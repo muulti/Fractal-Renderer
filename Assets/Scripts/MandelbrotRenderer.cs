@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class MandelbrotRenderer : MonoBehaviour
 {
-    public ComputeShader computeShader; 
+    public ComputeShader computeShader;
     private RenderTexture renderTexture; // Will store the output
     public int textureSize = 512;       // Resolution of the texture
-    
+
     public Vector2 variableC;
     public float zoom = 1.0f;           // Zoom level
     public Vector2 offset = Vector2.zero; // Offset in the complex plane
@@ -14,15 +14,19 @@ public class MandelbrotRenderer : MonoBehaviour
     public float escapeRadius = 2.0f;  // Escape radius for Mandelbrot
     public bool movingAnimation;
     public float animationSpeed = 0.0f;
+
+    private float aspectRatio;
+
     void Awake()
     {
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 75;
     }
+
     void Start()
     {
         InitializeRenderTexture();
-        variableC = new Vector2(-1.3f, 0.00525f);
+        variableC = new Vector2(0.0f, 0.0f);
         animationSpeed = 0.001f;
     }
 
@@ -34,15 +38,18 @@ public class MandelbrotRenderer : MonoBehaviour
             UpdateAnimation();
         }
 
+        // Calculate aspect ratio
+        aspectRatio = (float)Screen.width / Screen.height;
+
         // Set shader parameters
         computeShader.SetTexture(0, "Result", renderTexture); // Bind texture
-        computeShader.SetVector("resolution", new Vector2(textureSize, textureSize));
+        computeShader.SetVector("resolution", new Vector2(textureSize, textureSize)); // Send virtual square resolution
         computeShader.SetFloat("zoom", zoom);
-        computeShader.SetFloat("t", Time.deltaTime);
         computeShader.SetVector("offset", offset);
         computeShader.SetInt("maxIterations", maxIterations);
         computeShader.SetFloat("escapeRadius", escapeRadius);
         computeShader.SetVector("secondTerm", variableC);
+        computeShader.SetFloat("aspectRatio", aspectRatio); // Pass aspect ratio to the shader
 
         // Calculate thread groups (match texture size)
         int threadGroupsX = Mathf.CeilToInt(textureSize / 8.0f);
@@ -50,7 +57,6 @@ public class MandelbrotRenderer : MonoBehaviour
 
         // Dispatch the compute shader
         computeShader.Dispatch(0, threadGroupsX, threadGroupsY, 1);
-        
     }
 
     void InitializeRenderTexture()
@@ -70,8 +76,8 @@ public class MandelbrotRenderer : MonoBehaviour
 
     void UpdateAnimation()
     {
-        variableC.x =  1*Mathf.Sin(Time.time * animationSpeed);
-        variableC.y =  1*Mathf.Cos(Time.time * animationSpeed);
+        variableC.x = 1 * Mathf.Sin(Time.time * animationSpeed);
+        variableC.y = 1 * Mathf.Cos(Time.time * animationSpeed);
     }
 
     void ReadInput()
@@ -109,6 +115,7 @@ public class MandelbrotRenderer : MonoBehaviour
         {
             Debug.Log("Space Key Pressed");
             if (zoom>1) {zoom=1;}
+            else{zoom*=0.99f;}
         }
 
         // Keys "U", "J", "I", and "K"

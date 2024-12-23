@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2a40aa48-d597-4fff-8423-35bc9f03596f" name="Changes" comment="" />
+    <list default="true" id="2a40aa48-d597-4fff-8423-35bc9f03596f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Fractal Renderer/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Fractal Renderer/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MandelbrotRenderer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MandelbrotRenderer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Shaders/FractalComputeShader.compute" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Shaders/FractalComputeShader.compute" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -114,7 +118,8 @@
       <workItem from="1734824056839" duration="1038000" />
       <workItem from="1734849768363" duration="582000" />
       <workItem from="1734850369935" duration="14000" />
-      <workItem from="1734892490903" duration="3507000" />
+      <workItem from="1734892490903" duration="9365000" />
+      <workItem from="1734923596570" duration="1004000" />
     </task>
     <servers />
   </component>

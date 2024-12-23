@@ -8,9 +8,9 @@ static const float PI = 3.14159265359; // 10 decimal places for good precision
 float2 resolution; // Screen resolution
 float2 offset;     // Offset in the complex plane
 float zoom;        // Zoom level
-float time;         //Actually useless haha
 int maxIterations; // Maximum iterations
 float escapeRadius; // Escape radius (limit)
+float aspectRatio;
 float2 secondTerm;
 
 // Compute the next value in the sequence
@@ -23,36 +23,29 @@ int JuliaRender(float2 coords, int maxIt, float lim);
 int RedditGuyRender(float2 coords, int maxIt, float lim);
 float2 RedditGuyComputeNext(float2 z, float2 c);
 
+
 [numthreads(16, 16, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID) 
 {
-    
-    if (id.x >= resolution.x || id.y >= resolution.y) return;
+    if (id.x >= resolution.x || id.y >= resolution.y || resolution.y == 0) return;
 
-    //float2 ct = float2(constantValue,constantValue);
-    // Map pixel to the complex plane
-    float aspectRatio = resolution.x / resolution.y;
-    float2 pixelID;
+    // Normalize pixel coordinates to [0, 1]
+    float2 uv = (float2(id.xy) / resolution - 0.5f) * 2.0;
 
-    if (resolution.x > resolution.y) {
-        // If the screen is wider than tall, normalize x by aspect ratio
-        pixelID = (float2(id.x, id.y) / resolution.y - float2(resolution.x / resolution.y * 0.5, 0.5)) * 2.0 / zoom + offset;
-    } else {
-        // If the screen is taller than wide, normalize y by aspect ratio
-        pixelID = (float2(id.x, id.y) / resolution.x - float2(0.5, resolution.y / resolution.x * 0.5)) * 2.0 / zoom + offset;
-    }
+    // Apply aspect ratio correction
+    uv.x *= aspectRatio;
 
-    // Mandelbrot set: Z0 = 0, C = fractal
-    int iterations = JuliaRender(pixelID, maxIterations, escapeRadius);
+    // Apply zoom and offset to map to the complex plane
+    float2 pixelID = uv / zoom + offset;
+
+    // Calculate iterations using the fractal rendering function
+    int iterations = MandelbrotRender(pixelID, maxIterations, escapeRadius);
 
     // Normalize iterations for coloring
     float t = (float)iterations / maxIterations;
 
     // Apply color gradient
-    float3 color = float3(t,t,t);    //Greyscale (black background)
-    //float3 color = float3(t*t, 0., t * t*t);    //Purple-Black
-    //float3 color = float3(1-t,1-t,1-t);    //Greyscale (white background)
-    
+    float3 color = float3(t, t, t); // Greyscale gradient
 
     // Write the color to the output texture
     Result[id.xy] = float4(color, 1.0);
@@ -73,34 +66,7 @@ float2 ComputeNext(float2 z, float2 c)
     return float2(real, imag);
 }
 
-float2 RedditGuyComputeNext(float2 c1, float2 c2)
-// Z=i^z+c   wher both C and Z are complex in the form of Z=a+b*i
-//To compute Z
-//Where i^z = e^z*pi*i/2
-//but since z=a+b*i
-//z*i=a*i-b
-//And e^(term+@i) = term *[cos(@)+sin(@)*i]
-//then z = e^(-b*pi/2)+e^(a*i*pi/2)
-//Complex side is imaginary sine and real is real cosine 
-{
-    
-    //if (z.x == 0. && z.y == 0.) {return float2(0.0, 0.0);}
-    //float k = pow(E,-z.y*PI/2.); //exponential constant on the developed i^z term
-    //float q, r, j;
-    //r = sqrt(z.r*z.r + z.i*z.i);
-    //if (z.x==0.) {q = PI/2.;} else { q = atan(z.i/z.r);}
-    //j = (pow(r,c.x)/pow(E,c.y*q));
-    //float real = (k*cos(z.x*PI/2))+c.x;
-    //float imag = (k*sin(z.x*PI/2))+c.y;
-    //return float2(real, imag);
-    if (c1.x == 0.0 && c1.y == 0.0) { return float2(0.0, 0.0); }
-    float r, a, c, d;
-    r = sqrt(c1.x*c1.x + c1.y*c1.y);
-    if (c1.x == 0.0) { a = PI / 2.0; } else { a = atan(c1.y/c1.x); }
-    c = ( pow(r, c2.x) )/( pow(E, c2.y*a) );
-    d = c2.y*log(r) + c2.x*a;
-    return float2(c*cos(d), c*sin(d));
-}
+
 
 // Detect divergence
 int MandelbrotRender(float2 coords, int maxIt, float lim)
@@ -133,18 +99,39 @@ int JuliaRender(float2 coords, int maxIt, float lim)
     return i;
 }
 
-int RedditGuyRender(float2 coords, int maxIt, float lim)
-//In Julia fracta, Z changes depending on the pixel, and C remains fixed
-//Changing C results in modifying Julia´s anatomy (technically should at least)
+float2 RedditGuyComputeNext(float2 c1, float2 c2)
 {
-    //c: -1,3 + 0,00525·i
-    float2 zn = coords; // Start at Z0 = 0
-    int i = 0;
-    while (i < maxIt && dot(zn, zn) < lim * lim) 
+    // Handle edge case where c1 is (0, 0)
+    if (abs(c1.x) < 1e-6 && abs(c1.y) < 1e-6) 
     {
-        float2 aux = RedditGuyComputeNext(float2(0.,1.),zn);
-        zn = float2(aux.x, aux.y)+coords;
+        return float2(0.0, 0.0);
+    }
+
+    // Convert to polar form
+    float r = sqrt(c1.x * c1.x + c1.y * c1.y);  // Magnitude
+    if (r < 1e-6) r = 1e-6; // Avoid log(0) or division by zero
+    float a = (abs(c1.x) < 1e-6) ? PI / 2.0 : atan(c1.y / c1.x);  // Angle (atan2 equivalent)
+
+    // Compute power in polar coordinates
+    float c = pow(r, c2.x) / pow(E, c2.y * a);
+    float d = c2.y * log(r) + c2.x * a;
+
+    // Convert back to Cartesian form
+    return float2(c * cos(d), c * sin(d));
+}
+
+// Mandelbrot-style fractal render (mandelbrot equivalent)
+int RedditGuyRender(float2 coords, int maxIt, float lim)
+{
+    float2 zn = coords; // Start at Z0 matching the pixel coordinates
+    int i = 0;
+
+    while (i < maxIt && dot(zn, zn) < 100*100) 
+    {
+        zn = RedditGuyComputeNext(float2(0.0, 1.0), zn); // i^z
+        zn += coords; // Add constant C
         i++;
     }
+
     return i;
 }
